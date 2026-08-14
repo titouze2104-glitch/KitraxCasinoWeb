@@ -1,0 +1,335 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>KITRAX Casino</PageTitle>
+
+<div class="casino">
+    <h1>🎰 KITRAX CASINO</h1>
+
+    <div class="solde">💰 Solde : @solde crédits</div>
+
+    <div class="mise">
+        <label>Mise :</label>
+        <input type="number" @bind="mise" min="10" max="1000" step="10" />
+    </div>
+
+    <div class="choix">
+        <div>
+            <h3>🪙 Pile ou Face</h3>
+            <select @bind="choixPileFace">
+                <option value="Pile">Pile</option>
+                <option value="Face">Face</option>
+            </select>
+
+            <button @onclick="JouerPileFace">
+                JOUER
+            </button>
+        </div>
+
+        <div>
+            <h3>🎲 Dés</h3>
+
+            <select @bind="choixDe">
+                @for (int i = 1; i <= 6; i++)
+                {
+                    <option value="@i">@i</option>
+                }
+            </select>
+
+            <button @onclick="JouerDes">
+                JOUER
+            </button>
+        </div>
+    </div>
+
+    <button class="machine" @onclick="JouerMachine">
+        🎰 MACHINE À SOUS
+    </button>
+
+    <div class="resultat">
+        @resultat
+    </div>
+
+    @if (solde <= 0)
+    {
+        <button class="recommencer" @onclick="Recommencer">
+            🔄 RECOMMENCER
+        </button>
+    }
+</div>
+
+@code {
+    Random random = new();
+
+    int solde = 1000;
+    int mise = 50;
+
+    string choixPileFace = "Pile";
+    int choixDe = 1;
+
+    string resultat = "Choisis un jeu ! 🎰";
+
+    bool MiseValide()
+    {
+        if (mise <= 0)
+        {
+            resultat = "❌ Mise invalide.";
+            return false;
+        }
+
+        if (mise > solde)
+        {
+            resultat = "❌ Tu n'as pas assez de crédits.";
+            return false;
+        }
+
+        return true;
+    }
+
+    async Task JouerPileFace()
+    {
+        if (!MiseValide())
+            return;
+resultat = "🪙 La pièce tourne...";
+await Task.Delay(700);
+        string tirage = random.Next(2) == 0 ? "Pile" : "Face";
+
+        if (tirage == choixPileFace)
+        {
+            solde += mise;
+
+            resultat =
+                $"🪙 {tirage} ! GAGNÉ +{mise} crédits !";
+        }
+        else
+        {
+            solde -= mise;
+
+            resultat =
+                $"🪙 {tirage} ! PERDU -{mise} crédits.";
+        }
+    }
+
+    async Task JouerDes()
+    {
+        if (!MiseValide())
+            return;
+resultat = "🎲 Le dé roule...";
+await Task.Delay(700);
+        int tirage = random.Next(1, 7);
+
+        if (tirage == choixDe)
+        {
+            int gain = mise * 5;
+
+            solde += gain;
+
+            resultat =
+                $"🎲 Le dé fait {tirage} ! JACKPOT +{gain} crédits !";
+        }
+        else
+        {
+            solde -= mise;
+
+            resultat =
+                $"🎲 Le dé fait {tirage}. PERDU -{mise} crédits.";
+        }
+    }
+
+    async Task JouerMachine()
+    {
+        if (!MiseValide())
+            return;
+            resultat = "🎰 Ça tourne...\n🔄 🔄 🔄";
+await Task.Delay(700);
+
+        string[] symboles =
+        {
+            "🍒",
+            "🍋",
+            "🔔",
+            "💎",
+            "7️⃣"
+        };
+
+        string a = symboles[random.Next(symboles.Length)];
+        string b = symboles[random.Next(symboles.Length)];
+        string c = symboles[random.Next(symboles.Length)];
+
+        if (a == b && b == c)
+        {
+            int gain = mise * 10;
+
+            solde += gain;
+
+            resultat =
+                $"{a} {b} {c}\n🎉 JACKPOT ! +{gain} crédits !";
+        }
+        else if (a == b || b == c || a == c)
+        {
+            int gain = mise * 2;
+
+            solde += gain;
+
+            resultat =
+                $"{a} {b} {c}\n✨ GAGNÉ ! +{gain} crédits !";
+        }
+        else
+        {
+            solde -= mise;
+
+            resultat =
+                $"{a} {b} {c}\n❌ PERDU -{mise} crédits.";
+        }
+    }
+
+    void Recommencer()
+    {
+        solde = 1000;
+        mise = 50;
+        resultat = "Nouvelle partie ! 🎰";
+    }
+}
+
+<style>
+    body {
+        margin: 0;
+        background: radial-gradient(circle at top, #3a2400, #090909 55%);
+        min-height: 100vh;
+    }
+
+    .casino {
+        width: min(900px, 94%);
+        margin: 25px auto;
+        padding: 35px;
+        text-align: center;
+        background: rgba(15, 15, 15, 0.96);
+        color: white;
+        border: 3px solid #d4af37;
+        border-radius: 25px;
+        box-shadow: 0 0 35px rgba(212, 175, 55, .35);
+        font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    h1 {
+        font-size: clamp(32px, 6vw, 52px);
+        margin-bottom: 25px;
+        color: #ffd700;
+        text-shadow: 0 0 18px #b8860b;
+    }
+
+    .solde {
+        display: inline-block;
+        font-size: 28px;
+        font-weight: bold;
+        padding: 12px 25px;
+        margin: 15px;
+        background: #202020;
+        border: 2px solid #d4af37;
+        border-radius: 15px;
+    }
+
+    .mise {
+        font-size: 21px;
+        margin: 25px;
+    }
+
+    input, select {
+        padding: 11px;
+        font-size: 18px;
+        margin: 8px;
+        border-radius: 9px;
+        border: 2px solid #d4af37;
+        background: #292929;
+        color: white;
+    }
+
+    button {
+        padding: 14px 25px;
+        margin: 10px;
+        border: 2px solid #ffd700;
+        border-radius: 12px;
+        background: linear-gradient(#4a3a00, #211900);
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: .15s;
+    }
+
+    button:hover {
+        transform: scale(1.06);
+        box-shadow: 0 0 18px #ffd700;
+    }
+
+    button:active {
+        transform: scale(.96);
+    }
+
+    .choix {
+        display: flex;
+        justify-content: center;
+        gap: 50px;
+        margin: 30px 0;
+        flex-wrap: wrap;
+    }
+
+    .choix > div {
+        min-width: 250px;
+        padding: 20px;
+        background: #202020;
+        border-radius: 18px;
+        border: 1px solid #555;
+    }
+
+    .machine {
+        font-size: 25px;
+        padding: 22px 50px;
+        background: linear-gradient(#8a6500, #382900);
+    }
+
+    .resultat {
+        min-height: 130px;
+        margin-top: 30px;
+        padding: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(22px, 4vw, 31px);
+        font-weight: bold;
+        white-space: pre-line;
+        background: #202020;
+        border: 2px solid #d4af37;
+        border-radius: 18px;
+    }
+
+    .recommencer {
+        margin-top: 20px;
+        font-size: 22px;
+        background: #5c0000;
+    }
+
+    @@media (max-width: 600px) {
+        .casino {
+            padding: 18px;
+            margin: 10px auto;
+        }
+
+        .choix {
+            gap: 15px;
+        }
+
+        .choix > div {
+            width: 100%;
+        }
+
+        .machine {
+            width: 100%;
+            padding: 18px 5px;
+        }
+
+        .resultat {
+            min-height: 100px;
+        }
+    }
+</style>
